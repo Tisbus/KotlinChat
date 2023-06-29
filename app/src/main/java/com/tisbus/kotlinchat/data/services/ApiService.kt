@@ -1,5 +1,6 @@
 package com.tisbus.kotlinchat.data.services
 
+import com.tisbus.kotlinchat.domain.entity.Message
 import com.tisbus.kotlinchat.domain.entity.User
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -15,4 +16,12 @@ interface ApiService {
     @Headers("Content-Type: application/json")
     @POST("users")
     fun addUser(@Body user : User?) : Call<User?>
+
+    @Headers("Content-Type: application/json")
+    @POST("users/add")
+    fun addMessage(@Body message: Message?) : Call<Message?>
+
+    @Headers("Content-Type: application/json")
+    @GET("users/get_all")
+    fun getMessage(): Call<List<Message?>>
 }

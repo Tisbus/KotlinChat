@@ -5,7 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
+import androidx.core.os.bundleOf
 import androidx.navigation.fragment.findNavController
 import com.tisbus.kotlinchat.R
 import com.tisbus.kotlinchat.data.services.ApiService
@@ -16,7 +16,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class AuthFragment : Fragment() {
+class AuthFragment : androidx.fragment.app.Fragment() {
 
     private var _bind: FragmentAuthBinding? = null
     private val bind: FragmentAuthBinding
@@ -36,7 +36,7 @@ class AuthFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        with(bind){
+        with(bind) {
             bEnterLogin.setOnClickListener {
                 authUser()
             }
@@ -54,7 +54,8 @@ class AuthFragment : Fragment() {
         response.enqueue(object : Callback<User?> {
             override fun onResponse(call: Call<User?>, response: Response<User?>) {
                 if (response.body()?.password.equals(password)) {
-                    findNavController().navigate(R.id.action_authFragment_to_chatFragment)
+                    val bundle = bundleOf(NAME_USER to loginName)
+                    findNavController().navigate(R.id.action_authFragment_to_chatFragment, bundle)
                 }
             }
 
@@ -62,5 +63,8 @@ class AuthFragment : Fragment() {
                 Log.d("errorLogin", t.toString())
             }
         })
+    }
+    companion object{
+        private const val NAME_USER = "user"
     }
 }

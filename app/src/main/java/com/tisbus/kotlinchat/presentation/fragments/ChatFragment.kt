@@ -1,60 +1,142 @@
 package com.tisbus.kotlinchat.presentation.fragments
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.tisbus.kotlinchat.R
+import android.widget.ScrollView
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.RecyclerView
+import com.tisbus.kotlinchat.data.services.ApiService
+import com.tisbus.kotlinchat.data.services.RetrofitChat
+import com.tisbus.kotlinchat.databinding.FragmentChatBinding
+import com.tisbus.kotlinchat.domain.entity.Message
+import com.tisbus.kotlinchat.presentation.adapter.MessageAdapter
+import com.tisbus.kotlinchat.presentation.viewmodel.MessageViewModel
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [ChatFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class ChatFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+
+    private var name: String? = null
+
+    private var _bind: FragmentChatBinding? = null
+    private val bind: FragmentChatBinding
+        get() = _bind ?: throw RuntimeException("FragmentChatBinding == null")
+
+    private lateinit var messageAdapter: MessageAdapter
+    private lateinit var messageViewModel: MessageViewModel
+    private lateinit var apiService: ApiService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+            name = it.getString(NAME_USER)
         }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_chat, container, false)
+    ): View {
+        _bind = FragmentChatBinding.inflate(inflater, container, false)
+        return bind.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        messageViewModel = ViewModelProvider(this)[MessageViewModel::class.java]
+        setupApiService()
+        updateChat()
+        setupRecycler()
+        buttonEnterText()
+    }
+
+    private fun buttonEnterText() {
+        with(bind){
+            bEnterText.setOnClickListener {
+                addMessToDB()
+                getAllMessageToDB()
+                scrollDown()
+            }
+        }
+    }
+
+    private fun scrollDown(){
+        with(bind){
+            recyclerListMessage.scrollToPosition((recyclerListMessage.adapter?.itemCount
+                ?: throw java.lang.RuntimeException("item == null")) -1)
+        }
+    }
+    private fun updateChat() {
+        messageViewModel.getListMessage.observe(viewLifecycleOwner) {
+            messageAdapter.submitList(it)
+            scrollDown()
+        }
+    }
+
+    private fun getAllMessageToDB() {
+        Thread.sleep(100)
+        val responseGet = apiService.getMessage()
+        responseGet.enqueue(object : Callback<List<Message?>> {
+            override fun onResponse(
+                call: Call<List<Message?>>,
+                response: Response<List<Message?>>,
+            ) {
+                messageViewModel.deleteAllMessage()
+                response.body()?.forEach { i ->
+                    if (i != null) {
+                        messageViewModel.addItemMessage(
+                            i.username,
+                            i.text,
+                            i.id
+                        )
+                    }
+                }
+
+            }
+            override fun onFailure(call: Call<List<Message?>>, t: Throwable) {
+                Log.d("errorLogin", t.toString())
+            }
+        })
+    }
+
+    private fun setupApiService() {
+        apiService = RetrofitChat.getInstance().create(ApiService::class.java)
+    }
+
+    private fun addMessToDB() {
+        val mes = Message(
+            name.toString(),
+            bind.etFieldText.text.toString()
+        )
+        val responseAdd = apiService.addMessage(mes)
+
+        responseAdd.enqueue(object : Callback<Message?> {
+            override fun onResponse(call: Call<Message?>, response: Response<Message?>) {
+
+            }
+
+            override fun onFailure(call: Call<Message?>, t: Throwable) {
+
+            }
+        })
+        bind.etFieldText.setText("")
+    }
+
+    private fun setupRecycler(): RecyclerView {
+        val recycler = bind.recyclerListMessage
+        with(recycler) {
+            messageAdapter = MessageAdapter()
+            adapter = messageAdapter
+        }
+        return recycler
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment ChatFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            ChatFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+        private const val NAME_USER = "user"
     }
 }
