@@ -3,11 +3,11 @@ package com.tisbus.kotlinchat.domain.entity
 import com.google.gson.annotations.SerializedName
 
 data class User(
-    @SerializedName("username")
-    val username: String,
-    @SerializedName("password")
+    val email: String,
+    val name: String,
     val password: String,
-    @SerializedName("id")
+    val userDate: Long,
+    val success: Long,
     val id: Int = UNDEFINED_ID,
 ) {
     companion object {

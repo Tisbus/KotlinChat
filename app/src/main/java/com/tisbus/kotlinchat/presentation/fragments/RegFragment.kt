@@ -8,12 +8,14 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.tisbus.kotlinchat.R
 import com.tisbus.kotlinchat.data.services.ApiService
+import com.tisbus.kotlinchat.data.services.HelpConvert
 import com.tisbus.kotlinchat.data.services.RetrofitChat
 import com.tisbus.kotlinchat.databinding.FragmentRegBinding
 import com.tisbus.kotlinchat.domain.entity.User
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.Calendar
 
 class RegFragment : Fragment() {
 
@@ -46,7 +48,7 @@ class RegFragment : Fragment() {
         val passwordConfirm = bind.tilPasswordRegConf.editText?.text.toString().trim()
         if (password == passwordConfirm) {
             val apiService = RetrofitChat.getInstance().create(ApiService::class.java)
-            val response = apiService.addUser(User(login, password))
+            val response = apiService.addUser(HelpConvert(this).createRegisterMap("email", login, password, Calendar.getInstance().timeInMillis))
             response.enqueue(object : Callback<User?> {
                 override fun onResponse(call: Call<User?>, response: Response<User?>) {
 

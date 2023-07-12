@@ -9,6 +9,7 @@ import androidx.core.os.bundleOf
 import androidx.navigation.fragment.findNavController
 import com.tisbus.kotlinchat.R
 import com.tisbus.kotlinchat.data.services.ApiService
+import com.tisbus.kotlinchat.data.services.HelpConvert
 import com.tisbus.kotlinchat.data.services.RetrofitChat
 import com.tisbus.kotlinchat.databinding.FragmentAuthBinding
 import com.tisbus.kotlinchat.domain.entity.User
@@ -48,13 +49,14 @@ class AuthFragment : androidx.fragment.app.Fragment() {
 
     private fun authUser() {
         val apiService = RetrofitChat.getInstance().create(ApiService::class.java)
-        val loginName = bind.tilLogin.editText?.text.toString().trim()
+        val email = bind.tilLogin.editText?.text.toString().trim()
         val password = bind.tilPassword.editText?.text.toString().trim()
-        val response = apiService.getUser(loginName)
+        val response = apiService.getUser(
+            HelpConvert(this).createLoginMap(email, password))
         response.enqueue(object : Callback<User?> {
             override fun onResponse(call: Call<User?>, response: Response<User?>) {
-                if (response.body()?.password.equals(password)) {
-                    val bundle = bundleOf(NAME_USER to loginName)
+                if (response.body()?.success?.toInt() == 1) {
+                    val bundle = bundleOf(NAME_USER to email)
                     findNavController().navigate(R.id.action_authFragment_to_chatFragment, bundle)
                 }
             }

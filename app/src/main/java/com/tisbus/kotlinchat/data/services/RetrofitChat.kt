@@ -23,7 +23,7 @@ object RetrofitChat {
             .setLenient()
             .create()
         return Retrofit.Builder()
-            .baseUrl("http://192.168.0.52:8080/")
+            .baseUrl("http://chat666.tw1.ru/rest_api/")
             .client(okHttpClient)
             .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
             .addConverterFactory(GsonConverterFactory.create(gson))
